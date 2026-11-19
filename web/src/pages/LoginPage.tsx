@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
+import { AuthLayout } from "../components/AuthLayout";
 import { useAuth } from "../features/auth/AuthContext";
 import { errorMessage } from "../features/auth/errors";
 
@@ -30,14 +31,21 @@ export function LoginPage() {
   }
 
   return (
-    <main>
-      <h1>Connexion</h1>
+    <AuthLayout
+      badge="Content de te revoir"
+      tagline="Connecte-toi pour créer, lancer et partager tes quiz en temps réel avec tes amis !"
+      switchText="Pas encore de compte ?"
+      switchLabel="Créer un compte"
+      switchTo="/register"
+    >
+      <h2 id="card-title">Connexion</h2>
       <form onSubmit={onSubmit}>
         <label>
           E-mail
           <input
             type="email"
             autoComplete="email"
+            placeholder="toi@exemple.fr"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -48,19 +56,17 @@ export function LoginPage() {
           <input
             type="password"
             autoComplete="current-password"
+            placeholder="Ton mot de passe"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
         </label>
         {error && <p role="alert">{error}</p>}
-        <button type="submit" disabled={submitting}>
-          Se connecter
+        <button type="submit" className="btn-primary" disabled={submitting}>
+          {submitting ? "Connexion…" : "Se connecter"}
         </button>
       </form>
-      <p>
-        Pas encore de compte ? <Link to="/register">Créer un compte</Link>
-      </p>
-    </main>
+    </AuthLayout>
   );
 }

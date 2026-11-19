@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
+import { AuthLayout } from "../components/AuthLayout";
 import { useAuth } from "../features/auth/AuthContext";
 import { errorMessage } from "../features/auth/errors";
 
@@ -31,14 +32,21 @@ export function RegisterPage() {
   }
 
   return (
-    <main>
-      <h1>Créer un compte</h1>
+    <AuthLayout
+      badge="Le quiz nouvelle génération"
+      tagline="Crée, joue et partage des quiz en temps réel avec tes amis !"
+      switchText="Déjà un compte ?"
+      switchLabel="Se connecter"
+      switchTo="/login"
+    >
+      <h2 id="card-title">Créer un compte</h2>
       <form onSubmit={onSubmit}>
         <label>
           Nom affiché
           <input
             type="text"
             autoComplete="nickname"
+            placeholder="Alex"
             required
             maxLength={50}
             value={displayName}
@@ -50,6 +58,7 @@ export function RegisterPage() {
           <input
             type="email"
             autoComplete="email"
+            placeholder="toi@exemple.fr"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -60,6 +69,7 @@ export function RegisterPage() {
           <input
             type="password"
             autoComplete="new-password"
+            placeholder="Au moins 8 caractères"
             required
             minLength={8}
             maxLength={128}
@@ -68,13 +78,10 @@ export function RegisterPage() {
           />
         </label>
         {error && <p role="alert">{error}</p>}
-        <button type="submit" disabled={submitting}>
-          Créer mon compte
+        <button type="submit" className="btn-primary" disabled={submitting}>
+          {submitting ? "Création…" : "Créer mon compte"}
         </button>
       </form>
-      <p>
-        Déjà un compte ? <Link to="/login">Se connecter</Link>
-      </p>
-    </main>
+    </AuthLayout>
   );
 }
