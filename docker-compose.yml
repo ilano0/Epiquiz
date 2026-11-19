@@ -10,6 +10,11 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:?}
     volumes:
       - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     networks: [backend]
 
   redis:
@@ -48,9 +53,12 @@ services:
     expose:
       - "3000"
     depends_on:
-      - db
-      - redis
-      - storage
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      storage:
+        condition: service_started
     networks: [backend, frontend]
 
   web:

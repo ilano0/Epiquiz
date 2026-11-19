@@ -95,7 +95,7 @@ erDiagram
 | `games` | `id`, `quiz_id`, `host_id`, `pin`, `mode` (`classic`, `team`, `homework`), `status` (`lobby`, `running`, `finished`), `started_at`, `finished_at` |
 | `game_questions` | `id`, `game_id`, `position`, `question_snapshot` jsonb : copie figée de la question et de ses options au lancement |
 | `teams` | `id`, `game_id`, `name` |
-| `players` | `id`, `game_id`, `team_id` nullable, `nickname`, `final_score`, `final_rank`, `joined_at`, contrainte unique (`game_id`, `nickname`) |
+| `players` | `id`, `game_id`, `team_id` nullable, `nickname`, `final_score`, `final_rank`, `joined_at`, contrainte unique (`game_id`, `lower(nickname)`) |
 | `answers` | `id`, `game_question_id`, `player_id`, `choice` jsonb, `is_correct`, `response_ms`, `points`, `streak`, unique (`game_question_id`, `player_id`) |
 
 Choix de conception :
@@ -105,6 +105,12 @@ Choix de conception :
 - Les parties et réponses sont écrites en base à la fin de la partie ; pendant la partie, elles vivent dans Redis.
 - Index : `games(host_id, finished_at desc)`, `answers(player_id)`, `players(game_id)`.
 - Les suppressions de quiz utilisent `on delete restrict` si des parties existent, pour préserver l'historique.
+- Le PIN est unique parmi les parties non terminées (index unique partiel sur `games(pin)`) et vérifié par `^[0-9]{6}$`.
+- Les unicités de position (`questions`, `options`) sont différées pour permettre de réordonner dans une transaction.
+
+### Migrations
+
+Les migrations sont des fichiers SQL numérotés dans `api/migrations/` (`001_schema.sql`). Au démarrage, l'API applique celles qui manquent dans une transaction, sous un verrou consultatif PostgreSQL, ce qui reste sûr avec `--scale api=2`. L'historique est dans la table `schema_migrations`. `npm run migrate` dans `api/` les applique à la demande. Pour changer le schéma, ajouter un nouveau fichier ; ne jamais modifier un fichier déjà appliqué.
 
 ## État temps réel : Redis
 
