@@ -46,7 +46,7 @@ export function RegisterPage() {
           <input
             type="text"
             autoComplete="nickname"
-            placeholder="Alex"
+            placeholder="Ilan"
             required
             maxLength={50}
             value={displayName}
