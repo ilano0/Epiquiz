@@ -1,26 +1,18 @@
-import { useEffect, useState } from "react";
-
-type ApiStatus = "loading" | "ok" | "error";
+import { Navigate, Route, Routes } from "react-router-dom";
+import { RequireAuth } from "./features/auth/RequireAuth";
+import { HomePage } from "./pages/HomePage";
+import { LoginPage } from "./pages/LoginPage";
+import { RegisterPage } from "./pages/RegisterPage";
 
 export function App() {
-  const [status, setStatus] = useState<ApiStatus>("loading");
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/health", { signal: controller.signal })
-      .then((res) => setStatus(res.ok ? "ok" : "error"))
-      .catch((err: unknown) => {
-        if (!(err instanceof DOMException && err.name === "AbortError")) {
-          setStatus("error");
-        }
-      });
-    return () => controller.abort();
-  }, []);
-
   return (
-    <main>
-      <h1>Epiquiz</h1>
-      <p>API : {status}</p>
-    </main>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route element={<RequireAuth />}>
+        <Route path="/" element={<HomePage />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
