@@ -67,7 +67,8 @@ L'écran animateur et l'écran joueur partagent le même client temps réel. L'�
 - Animateurs : inscription et connexion par email et mot de passe haché avec argon2. L'API émet un JWT signé avec `JWT_SECRET`, stocké dans un cookie `HttpOnly`, `Secure`, `SameSite=Lax`.
 - Routes protégées : un middleware vérifie le JWT et rattache l'utilisateur à la requête. Les sockets animateur sont authentifiées avec le même jeton.
 - Joueurs : aucun compte. Un `playerToken` signé est délivré à l'arrivée dans une partie et sert à la reconnexion.
-- Rate limiting : compteurs Redis par IP sur l'authentification et la saisie du PIN.
+- Rate limiting : compteurs Redis par IP sur l'authentification (10 requêtes par minute sur `/api/auth/login` et `/api/auth/register`, réponse `429` avec `Retry-After`). L'API ne fait confiance qu'à un proxy (`trust proxy` à 1) : l'IP est celle ajoutée par nginx, pas celle d'un en-tête `X-Forwarded-For` fourni par le client.
+- Endpoints : `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`. Mot de passe de 8 à 128 caractères ; `login` renvoie la même erreur pour un e-mail inconnu et un mauvais mot de passe. Le cookie est `Secure` quand `PUBLIC_URL` commence par `https://`.
 
 ## Données durables : PostgreSQL
 
@@ -123,7 +124,7 @@ Les migrations sont des fichiers SQL numérotés dans `api/migrations/` (`001_sc
 | `game:{pin}:scores` | sorted set | score par joueur, source du classement | idem |
 | `game:{pin}:timer` | string avec expiration | échéance de la question, verrou `SET NX` de clôture | durée de la question |
 | `pin:{pin}` | string | `gameId`, garantit l'unicité du PIN | idem |
-| `rl:{route}:{ip}` | compteur | limitation de débit | fenêtre glissante |
+| `rl:{route}:{ip}` | compteur | limitation de débit | fenêtre fixe de 60 s |
 
 Le canal pub/sub de l'adaptateur Socket.IO relaie les diffusions entre instances de l'API.
 
