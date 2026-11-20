@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { AuthLayout } from "../components/AuthLayout";
 import { useAuth } from "../features/auth/AuthContext";
-import { errorMessage } from "../features/auth/errors";
+import { GENERIC_ERROR } from "../api/client";
 
 export function LoginPage() {
   const { user, loading, login } = useAuth();
@@ -23,8 +23,8 @@ export function LoginPage() {
     try {
       await login(email, password);
       navigate("/", { replace: true });
-    } catch (err) {
-      setError(errorMessage(err));
+    } catch {
+      setError(GENERIC_ERROR);
     } finally {
       setSubmitting(false);
     }

@@ -1,3 +1,5 @@
+export const GENERIC_ERROR = "Une erreur est survenue. Réessaie.";
+
 export class ApiError extends Error {
   readonly status: number;
   readonly code: string;
