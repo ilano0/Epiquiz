@@ -4,9 +4,12 @@ import type { Pool } from "pg";
 import type { Config } from "./config/env.js";
 import { createAuthRouter } from "./http/auth.js";
 import { healthRouter } from "./http/health.js";
+import { createQuizzesRouter } from "./http/quizzes.js";
 import type { RedisClient } from "./repositories/redis.js";
+import { createQuizRepository } from "./repositories/quizzes.js";
 import { createUserRepository } from "./repositories/users.js";
 import { createAuthService } from "./services/auth.js";
+import { createQuizService } from "./services/quizzes.js";
 
 interface AppDeps {
   config: Config;
@@ -17,6 +20,7 @@ interface AppDeps {
 export function createApp({ config, pool, redis }: AppDeps): Express {
   const app = express();
   const auth = createAuthService(createUserRepository(pool), config.JWT_SECRET);
+  const quizzes = createQuizService(createQuizRepository(pool));
 
   app.disable("x-powered-by");
   app.set("trust proxy", 1);
@@ -28,6 +32,7 @@ export function createApp({ config, pool, redis }: AppDeps): Express {
     "/api/auth",
     createAuthRouter({ auth, redis, secureCookies: config.PUBLIC_URL.startsWith("https://") }),
   );
+  app.use("/api/quizzes", createQuizzesRouter({ auth, quizzes }));
 
   app.use("/api", (_req, res) => {
     res.status(404).json({ error: "not_found" });
