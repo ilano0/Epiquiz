@@ -70,6 +70,32 @@ L'écran animateur et l'écran joueur partagent le même client temps réel. L'�
 - Rate limiting : compteurs Redis par IP sur l'authentification (10 requêtes par minute sur `/api/auth/login` et `/api/auth/register`, réponse `429` avec `Retry-After`). L'API ne fait confiance qu'à un proxy (`trust proxy` à 1) : l'IP est celle ajoutée par nginx, pas celle d'un en-tête `X-Forwarded-For` fourni par le client.
 - Endpoints : `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`. Mot de passe de 8 à 128 caractères ; `login` renvoie la même erreur pour un e-mail inconnu et un mauvais mot de passe. Le cookie est `Secure` quand `PUBLIC_URL` commence par `https://`.
 
+## API des quiz
+
+Toutes les routes exigent un animateur connecté. Un quiz n'est visible et modifiable que par son propriétaire : l'accès au quiz d'un autre utilisateur renvoie `404`, comme un quiz inexistant.
+
+| Méthode | Chemin | Rôle |
+| --- | --- | --- |
+| `GET` | `/api/quizzes` | Liste des quiz de l'utilisateur avec le nombre de questions, du plus récemment modifié au plus ancien |
+| `POST` | `/api/quizzes` | Crée un quiz (`title`, `description` facultative) |
+| `GET` | `/api/quizzes/:id` | Quiz avec ses questions et leurs réponses, dans l'ordre |
+| `PATCH` | `/api/quizzes/:id` | Modifie `title` et ou `description` |
+| `DELETE` | `/api/quizzes/:id` | Supprime le quiz et ses questions ; `409 quiz_has_games` s'il a déjà des parties |
+| `POST` | `/api/quizzes/:id/questions` | Ajoute une question à la fin |
+| `PUT` | `/api/quizzes/:id/questions/:questionId` | Remplace une question et ses réponses |
+| `DELETE` | `/api/quizzes/:id/questions/:questionId` | Supprime une question et renumérote les suivantes |
+| `PUT` | `/api/quizzes/:id/questions/order` | Réordonne : `questionIds` doit contenir toutes les questions du quiz, une fois chacune |
+
+Règles de validation d'une question (`400 invalid_input` avec le détail par champ) :
+
+| Type | Réponses | Bonnes réponses |
+| --- | --- | --- |
+| `single` | 2 à 6 | exactement 1 |
+| `multiple` | 2 à 6 | au moins 1 |
+| `true_false` | exactement 2 | exactement 1 |
+| `text` | 1 à 10 réponses acceptées | toutes |
+
+
 ## Données durables : PostgreSQL
 
 ```mermaid
