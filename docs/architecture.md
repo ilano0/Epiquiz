@@ -62,6 +62,15 @@ web/src
 
 L'écran animateur et l'écran joueur partagent le même client temps réel. L'état de la partie côté client est dérivé des événements ; le client ne calcule jamais le score ni la justesse.
 
+### Studio de quiz
+
+Les pages protégées (`/` et `/quizzes/:id`) partagent la mise en page `AppLayout` (en-tête, navigation, déconnexion).
+
+- `/` : tableau de bord. Liste des quiz de l'utilisateur, création par un titre, suppression avec confirmation (refusée par l'API si le quiz a déjà des parties).
+- `/quizzes/:id` : studio. Titre et description du quiz, liste des questions (sélection, monter, descendre, supprimer) et éditeur de question pour les quatre types (`single`, `multiple`, `true_false`, `text`).
+
+`features/quiz-editor/questions.ts` contient les limites par type et la validation du formulaire, qui reprennent les règles de l'API (voir « API des quiz ») pour afficher les erreurs avant l'envoi. L'API reste la référence : toute écriture y est revalidée. Changer le type d'une question adapte les réponses déjà saisies (une seule bonne réponse pour `single`, toutes correctes pour `text`) ; quitter `true_false` repart de réponses vides. L'ajout d'images dans le studio dépend de l'envoi des médias (issue 1.5).
+
 ## Authentification
 
 - Animateurs : inscription et connexion par email et mot de passe haché avec argon2. L'API émet un JWT signé avec `JWT_SECRET`, stocké dans un cookie `HttpOnly`, `Secure`, `SameSite=Lax`.
