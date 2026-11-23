@@ -3,18 +3,22 @@ import { createApp } from "./app.js";
 import { loadConfig } from "./config/env.js";
 import { migrate } from "./db/migrate.js";
 import { createPool } from "./db/pool.js";
+import { createMediaRepository } from "./repositories/media.js";
 import { connectRedis } from "./repositories/redis.js";
 
 const config = loadConfig();
 const pool = createPool(config.DATABASE_URL);
 const redis = await connectRedis(config.REDIS_URL);
 
+const mediaRepository = createMediaRepository(config);
+await mediaRepository.ensureBucket();
+
 const applied = await migrate(pool);
 if (applied.length > 0) {
   console.log(`Migrations appliquées : ${applied.join(", ")}`);
 }
 
-const server = createServer(createApp({ config, pool, redis }));
+const server = createServer(createApp({ config, pool, redis, mediaRepository }));
 
 server.listen(config.PORT, () => {
   console.log(`API à l'écoute sur le port ${config.PORT}`);
