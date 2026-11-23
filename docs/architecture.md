@@ -104,6 +104,24 @@ Règles de validation d'une question (`400 invalid_input` avec le détail par ch
 | `true_false` | exactement 2 | exactement 1 |
 | `text` | 1 à 10 réponses acceptées | toutes |
 
+## Médias
+
+Les images sont stockées dans le bucket S3 `S3_BUCKET` (créé au démarrage de l'API s'il n'existe pas, avec nouvelles tentatives le temps que le stockage démarre).
+
+| Méthode | Chemin | Description |
+| --- | --- | --- |
+| `POST` | `/api/media` | Animateur connecté. Corps binaire brut avec `Content-Type` `image/png`, `image/jpeg`, `image/gif` ou `image/webp`. Répond `201` avec `{ media: { key, url, contentType, size } }` |
+| `GET` | `/media/:key` | Public, pour que les joueurs voient les images sans compte. Relaie le flux S3 avec `Cache-Control: public, max-age=31536000, immutable`, `X-Content-Type-Options: nosniff` et une CSP `default-src 'none'` |
+
+Validation à l'envoi :
+
+- Taille de 1 octet à 5 Mo, sinon `413 file_too_large`.
+- Le type est vérifié sur les octets du fichier (signature PNG, JPEG, GIF ou WebP), pas seulement sur l'en-tête : un type non pris en charge, un fichier qui ne correspond pas au type annoncé ou un fichier vide renvoie `415 invalid_media`. Le SVG est refusé.
+- La clé est générée par le serveur (`<uuid>.<extension>`), jamais dérivée du nom du fichier. `GET /media/:key` renvoie `404` pour toute clé qui n'a pas ce format.
+- 60 envois par fenêtre de 10 minutes et par adresse IP (`429 too_many_requests`).
+
+La clé retournée est destinée aux colonnes `media_key` des questions et des réponses ; leur rattachement dans le studio relève de l'issue 1.6.
+
 
 ## Données durables : PostgreSQL
 
